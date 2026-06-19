@@ -30,11 +30,8 @@ func (tr *TCP) TCPPortCheck(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	if conn != nil {
-		defer conn.Close()
-		return true, nil
-	}
-	return false, nil
+	defer conn.Close()
+	return true, nil
 }
 
 // TLSPortCheck check if a scured tcp port is open

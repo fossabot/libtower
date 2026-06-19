@@ -15,6 +15,8 @@ type HTTPS struct {
 	Port    string
 	Timeout time.Duration
 
+	InsecureSkipVerify bool
+
 	Start    time.Time
 	End      time.Time
 	Duration time.Duration
@@ -31,22 +33,19 @@ func (hs *HTTPS) HTTPSCheck(ctx context.Context) (bool, time.Time, error) {
 	}
 	hs.Start = time.Now()
 	conn, err := tls.DialWithDialer(&dialer, "tcp", address, &tls.Config{
-		InsecureSkipVerify: false,
+		InsecureSkipVerify: hs.InsecureSkipVerify,
 	})
 	hs.End = time.Now()
 	hs.Duration = hs.End.Sub(hs.Start)
 	if err != nil {
 		return false, time.Time{}, err
 	}
-	if conn != nil {
-		defer conn.Close()
-		var NotAfter = conn.ConnectionState().PeerCertificates[0].NotAfter
-		for _, cert := range conn.ConnectionState().PeerCertificates {
-			if cert.NotAfter.Before(NotAfter) {
-				NotAfter = cert.NotAfter
-			}
+	defer conn.Close()
+	var NotAfter = conn.ConnectionState().PeerCertificates[0].NotAfter
+	for _, cert := range conn.ConnectionState().PeerCertificates {
+		if cert.NotAfter.Before(NotAfter) {
+			NotAfter = cert.NotAfter
 		}
-		return true, NotAfter, nil
 	}
-	return false, time.Time{}, nil
+	return true, NotAfter, nil
 }

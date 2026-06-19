@@ -20,36 +20,46 @@ type DNS struct {
 	Duration time.Duration
 }
 
+// resolverFn resolves hostnames via DNS. Tests swap this to point at a local server.
+var resolverFn = func(ctx context.Context, addr string) ([]net.IPAddr, error) {
+	return (&net.Resolver{}).LookupIPAddr(ctx, addr)
+}
+
 // DNSLookup func
 func DNSLookup(addr string) (*net.IPAddr, time.Duration, error) {
-	var dns time.Time
-	var DNS time.Duration
+	var dnsTime time.Time
+	var dnsDuration time.Duration
 	traceDNS := &httptrace.ClientTrace{
 		DNSStart: func(dsi httptrace.DNSStartInfo) {
-			dns = time.Now()
+			dnsTime = time.Now()
 		},
 		DNSDone: func(ddi httptrace.DNSDoneInfo) {
-			DNS = time.Since(dns)
+			dnsDuration = time.Since(dnsTime)
 		},
 	}
 	ctx := httptrace.WithClientTrace(context.Background(), traceDNS)
-	ips, err := (&net.Resolver{}).LookupIPAddr(ctx, addr)
+	ips, err := resolverFn(ctx, addr)
 	if err != nil {
 		return nil, 0, err
 	}
 	if len(ips) == 0 {
 		return nil, 0, errors.New("ips len is zero")
 	}
-	return &ips[0], DNS, nil
+	return &ips[0], dnsDuration, nil
 }
 
-//DNSLookupFrom func
+// DNSLookupFrom func
 func DNSLookupFrom(addr string, server string) (*net.IPAddr, time.Duration, error) {
-	severIP := net.ParseIP(server)
+	host, port, err := net.SplitHostPort(server)
+	if err != nil {
+		host = server
+		port = "53"
+	}
+	severIP := net.ParseIP(host)
 	if severIP == nil {
 		return new(net.IPAddr), 0, errors.New("failed to parse server ip address")
 	}
-	serverAddress := server + ":53"
+	serverAddress := net.JoinHostPort(host, port)
 
 	msg := dns.Msg{}
 	msg.Id = dns.Id()
@@ -62,10 +72,7 @@ func DNSLookupFrom(addr string, server string) (*net.IPAddr, time.Duration, erro
 	if err != nil {
 		return nil, 0, errors.New("dns exchange error: " + err.Error())
 	}
-	if resp == nil {
-		return nil, 0, errors.New("response is nil")
-	}
-	if resp != nil && resp.Rcode != dns.RcodeSuccess {
+	if resp.Rcode != dns.RcodeSuccess {
 		return nil, 0, errors.New(dns.RcodeToString[resp.Rcode])
 	}
 	for _, record := range resp.Answer {

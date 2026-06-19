@@ -11,3 +11,6 @@ type Time struct {
 
 // Timeout type
 type Timeout time.Duration
+
+// isOffline is set by vars_offline.go init() when building with -tags offline.
+var isOffline bool
