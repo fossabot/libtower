@@ -41,7 +41,11 @@ func (ws *WebSocket) WSCheck(ctx context.Context) error {
 
 	host := u.Host
 	if u.Port() == "" {
-		host += ":80"
+		if u.Scheme == "wss" {
+			host += ":443"
+		} else {
+			host += ":80"
+		}
 	}
 
 	dialer := net.Dialer{Timeout: ws.Timeout}

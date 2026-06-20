@@ -30,6 +30,7 @@ func (hsr *HTTP) HTTPStatusContext(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	hsr.End = time.Now()
 
 	hsr.Duration = hsr.End.Sub(hsr.Start)

@@ -50,7 +50,7 @@ type PingCheck struct {
 }
 
 // Check sends an ICMP echo request to Addr.
-func (pc PingCheck) Check(ctx context.Context) Result {
+func (pc *PingCheck) Check(ctx context.Context) Result {
 	ip, dur, err := PingContext(ctx, pc.Addr, pc.Seq)
 	return Result{
 		OK:       err == nil,

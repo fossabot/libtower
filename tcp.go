@@ -41,7 +41,7 @@ func (tr *TCP) Check(ctx context.Context) Result {
 	return Result{OK: ok, Duration: tr.Duration, Error: err}
 }
 
-// TLSPortCheck check if a scured tcp port is open
+// TLSPortCheck checks if a secured TLS port is open
 func (tr *TCP) TLSPortCheck(ctx context.Context) (bool, error) {
 	cert, err := tls.LoadX509KeyPair(tr.CertFile, tr.PrivateKeyFile)
 	if err != nil {

@@ -134,7 +134,7 @@ func TestDNSCheck(t *testing.T) {
 }
 
 func TestPingCheck(t *testing.T) {
-	pc := PingCheck{Addr: "nonexistent.example", Seq: 1}
+	pc := &PingCheck{Addr: "nonexistent.example", Seq: 1}
 	r := pc.Check(context.TODO())
 	if r.OK {
 		t.Fatal("Check() OK = true, want false (nonexistent host)")
@@ -151,5 +151,6 @@ func TestCheckerInterface(t *testing.T) {
 	var _ Checker = (*HTTP)(nil)
 	var _ Checker = (*HTTPTrace)(nil)
 	var _ Checker = (*DNS)(nil)
-	var _ Checker = PingCheck{}
+	var _ Checker = (*PingCheck)(nil)
+	var _ Checker = (*WebSocket)(nil)
 }

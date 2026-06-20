@@ -76,8 +76,8 @@ func DNSLookupFromContext(ctx context.Context, addr string, server string) (*net
 		host = server
 		port = "53"
 	}
-	severIP := net.ParseIP(host)
-	if severIP == nil {
+	serverIP := net.ParseIP(host)
+	if serverIP == nil {
 		return new(net.IPAddr), 0, errors.New("failed to parse server ip address")
 	}
 	serverAddress := net.JoinHostPort(host, port)
@@ -93,6 +93,9 @@ func DNSLookupFromContext(ctx context.Context, addr string, server string) (*net
 	if err != nil {
 		return nil, 0, errors.New("dns exchange error: " + err.Error())
 	}
+	if resp == nil {
+		return nil, 0, errors.New("response is nil")
+	}
 	if resp.Rcode != dns.RcodeSuccess {
 		return nil, 0, errors.New(dns.RcodeToString[resp.Rcode])
 	}
@@ -102,5 +105,5 @@ func DNSLookupFromContext(ctx context.Context, addr string, server string) (*net
 			return &ipAddress, rtt, nil
 		}
 	}
-	return nil, 0, errors.New("record a not find in response")
+	return nil, 0, errors.New("no A record found in DNS response")
 }

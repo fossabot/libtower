@@ -47,15 +47,17 @@ func (ht *HTTPTrace) TraceContext(ctx context.Context) error {
 		},
 
 		GotFirstResponseByte: func() {
-			ht.Connect = time.Since(start)
+			ht.GotFirstResponseByte = time.Since(start)
 		},
 	}
 
 	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	start = time.Now()
-	if _, err := http.DefaultTransport.RoundTrip(req); err != nil {
+	resp, err := http.DefaultTransport.RoundTrip(req)
+	if err != nil {
 		return err
 	}
+	resp.Body.Close()
 	ht.Total = time.Since(start)
 
 	return nil

@@ -76,7 +76,7 @@ func realICMPPing(dst *net.IPAddr, seq int) (time.Duration, error) {
 	} else if isIPv6(dst.IP) {
 		c, err = icmpListenFn("ip6:ipv6-icmp", "::")
 	} else {
-		return 0, fmt.Errorf("can not find version of ip(v4/v6):%s", dst.IP.String())
+		return 0, fmt.Errorf("cannot determine IP version for %s", dst.IP.String())
 	}
 	if err != nil {
 		return 0, err

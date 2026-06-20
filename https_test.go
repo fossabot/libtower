@@ -181,3 +181,32 @@ func TestCertExpiringWarningError(t *testing.T) {
 		t.Errorf("Error() = %q, want expiry message", s)
 	}
 }
+
+func TestHTTPSCheckHandshakeError(t *testing.T) {
+	ctx := context.TODO()
+
+	// Plain TCP server — TLS handshake will fail, covering rawConn.Close()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to listen: %v", err)
+	}
+	defer ln.Close()
+	go func() {
+		conn, _ := ln.Accept()
+		if conn != nil {
+			buf := make([]byte, 1024)
+			conn.Read(buf) // read ClientHello, then close
+			conn.Close()
+		}
+	}()
+
+	host, port, _ := net.SplitHostPort(ln.Addr().String())
+	hs := &HTTPS{Host: host, Port: port, Timeout: time.Second}
+	ok, _, err := hs.HTTPSCheck(ctx)
+	if err == nil {
+		t.Fatal("expected TLS handshake error against plain TCP, got nil")
+	}
+	if ok {
+		t.Error("HTTPSCheck() = true, want false")
+	}
+}

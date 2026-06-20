@@ -67,12 +67,13 @@ func (hs *HTTPS) HTTPSCheck(ctx context.Context) (bool, time.Time, error) {
 		return false, time.Time{}, err
 	}
 
-	tlsCfg := &tls.Config{InsecureSkipVerify: hs.InsecureSkipVerify}
+	tlsCfg := &tls.Config{InsecureSkipVerify: hs.InsecureSkipVerify, ServerName: hs.Host}
 	conn := tls.Client(rawConn, tlsCfg)
 	err = conn.Handshake()
 	hs.End = time.Now()
 	hs.Duration = hs.End.Sub(hs.Start)
 	if err != nil {
+		rawConn.Close()
 		return false, time.Time{}, err
 	}
 	defer conn.Close()
