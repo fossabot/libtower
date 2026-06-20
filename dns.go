@@ -85,7 +85,7 @@ func DNSLookupFromContext(ctx context.Context, addr string, server string) (*net
 	msg := dns.Msg{}
 	msg.Id = dns.Id()
 	msg.RecursionDesired = true
-	msg.Question = []dns.Question{dns.Question{Name: dns.Fqdn(addr), Qtype: dns.TypeA, Qclass: dns.ClassINET}}
+	msg.Question = []dns.Question{{Name: dns.Fqdn(addr), Qtype: dns.TypeA, Qclass: dns.ClassINET}}
 
 	client := dns.Client{Net: "udp"}
 	resp, rtt, err := client.ExchangeContext(ctx, &msg, serverAddress)
