@@ -23,9 +23,9 @@ func ExampleDNSLookup() {
 
 func ExampleHTTPS_Check() {
 	hs := &libtower.HTTPS{
-		Host:                  "example.com",
-		Timeout:               5 * time.Second,
-		WarnIfExpiringWithin:  30 * 24 * time.Hour,
+		Host:                 "example.com",
+		Timeout:              5 * time.Second,
+		WarnIfExpiringWithin: 30 * 24 * time.Hour,
 	}
 	r := hs.Check(context.Background())
 	fmt.Println("ok:", r.OK)

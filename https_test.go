@@ -122,10 +122,10 @@ func TestHTTPSCheckCertExpiryWarning(t *testing.T) {
 
 	// Set a large warning window — the test cert is valid for 1 hour, so it triggers
 	hs := &HTTPS{
-		Host:                  host,
-		Port:                  port,
-		Timeout:               time.Second,
-		InsecureSkipVerify:    true,
+		Host:                 host,
+		Port:                 port,
+		Timeout:              time.Second,
+		InsecureSkipVerify:   true,
 		WarnIfExpiringWithin: 2 * time.Hour,
 	}
 	r := hs.Check(ctx)
@@ -153,10 +153,10 @@ func TestHTTPSCheckCertExpiryNoWarning(t *testing.T) {
 	defer ln.Close()
 
 	hs := &HTTPS{
-		Host:                  host,
-		Port:                  port,
-		Timeout:               time.Second,
-		InsecureSkipVerify:    true,
+		Host:                 host,
+		Port:                 port,
+		Timeout:              time.Second,
+		InsecureSkipVerify:   true,
 		WarnIfExpiringWithin: 0, // disabled
 	}
 	r := hs.Check(ctx)
