@@ -315,3 +315,19 @@ func TestPingDNSEmptyIps(t *testing.T) {
 		t.Fatal("expected error for empty DNS response, got nil")
 	}
 }
+
+func TestPingContextSuccess(t *testing.T) {
+	if !isOffline {
+		t.Skip("skipping in online mode; run with -tags offline")
+	}
+	ip, dur, err := PingContext(context.TODO(), "example.com", 1)
+	if err != nil {
+		t.Fatalf("PingContext() error: %v", err)
+	}
+	if ip.String() != "1.2.3.4" {
+		t.Errorf("PingContext() IP = %v, want 1.2.3.4", ip)
+	}
+	if dur <= 0 {
+		t.Errorf("PingContext() dur = %v, want > 0", dur)
+	}
+}

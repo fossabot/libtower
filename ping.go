@@ -1,6 +1,7 @@
 package libtower
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -37,9 +38,27 @@ var icmpPingFn = realICMPPing
 var dnsLookupFn = DNSLookup
 
 // Ping sends an ICMP echo request to addr and returns the resolved address,
-// round-trip time, and any error. Requires root for raw ICMP sockets.
+// round-trip time, and any error.
+//
+// Requires root privileges (or CAP_NET_RAW on Linux) for raw ICMP sockets.
+// Without root, this returns "socket: operation not permitted".
+// Use -tags offline for rootless testing.
 func Ping(addr string, seq int) (*net.IPAddr, time.Duration, error) {
 	dst, _, err := dnsLookupFn(addr)
+	if err != nil {
+		return dst, 0, err
+	}
+	dur, err := icmpPingFn(dst, seq)
+	return dst, dur, err
+}
+
+// PingContext sends an ICMP echo request to addr, respecting ctx cancellation.
+//
+// Requires root privileges (or CAP_NET_RAW on Linux) for raw ICMP sockets.
+// Without root, this returns "socket: operation not permitted".
+// Use -tags offline for rootless testing.
+func PingContext(ctx context.Context, addr string, seq int) (*net.IPAddr, time.Duration, error) {
+	dst, _, err := DNSLookupContext(ctx, addr)
 	if err != nil {
 		return dst, 0, err
 	}

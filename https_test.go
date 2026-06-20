@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"math/big"
 	"net"
+	"strings"
 	"testing"
 	"time"
 )
@@ -111,5 +112,72 @@ func TestHTTPSCheckDefaultPort(t *testing.T) {
 	}
 	if hs.Port != DefaultHTTPSPort {
 		t.Errorf("Port = %q, want %q", hs.Port, DefaultHTTPSPort)
+	}
+}
+
+func TestHTTPSCheckCertExpiryWarning(t *testing.T) {
+	ctx := context.TODO()
+	ln, host, port := newLocalTLSServer(t)
+	defer ln.Close()
+
+	// Set a large warning window — the test cert is valid for 1 hour, so it triggers
+	hs := &HTTPS{
+		Host:                  host,
+		Port:                  port,
+		Timeout:               time.Second,
+		InsecureSkipVerify:    true,
+		WarnIfExpiringWithin: 2 * time.Hour,
+	}
+	r := hs.Check(ctx)
+	if !r.OK {
+		t.Fatalf("Check() OK = false, want true; err=%v", r.Error)
+	}
+	if r.Warning == nil {
+		t.Fatal("Warning = nil, want non-nil (cert expiring within 2h)")
+	}
+	cw, ok := r.Warning.(*CertExpiringWarning)
+	if !ok {
+		t.Fatalf("Warning type = %T, want *CertExpiringWarning", r.Warning)
+	}
+	if cw.NotAfter.IsZero() {
+		t.Error("NotAfter is zero")
+	}
+	if cw.Remaining <= 0 {
+		t.Errorf("Remaining = %v, want > 0", cw.Remaining)
+	}
+}
+
+func TestHTTPSCheckCertExpiryNoWarning(t *testing.T) {
+	ctx := context.TODO()
+	ln, host, port := newLocalTLSServer(t)
+	defer ln.Close()
+
+	hs := &HTTPS{
+		Host:                  host,
+		Port:                  port,
+		Timeout:               time.Second,
+		InsecureSkipVerify:    true,
+		WarnIfExpiringWithin: 0, // disabled
+	}
+	r := hs.Check(ctx)
+	if !r.OK {
+		t.Fatalf("Check() OK = false, want true; err=%v", r.Error)
+	}
+	if r.Warning != nil {
+		t.Errorf("Warning = %v, want nil (WarnIfExpiringWithin=0)", r.Warning)
+	}
+}
+
+func TestCertExpiringWarningError(t *testing.T) {
+	w := &CertExpiringWarning{
+		NotAfter:  time.Now().Add(30 * time.Minute),
+		Remaining: 30 * time.Minute,
+	}
+	s := w.Error()
+	if s == "" {
+		t.Error("Error() returned empty string")
+	}
+	if !strings.Contains(s, "30m") && !strings.Contains(s, "certificate") {
+		t.Errorf("Error() = %q, want expiry message", s)
 	}
 }

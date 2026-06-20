@@ -7,3 +7,5 @@ bin/
 *.test
 *.out
 vendor/
+.idea/
+coverage.out

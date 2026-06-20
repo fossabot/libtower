@@ -25,8 +25,24 @@ var resolverFn = func(ctx context.Context, addr string) ([]net.IPAddr, error) {
 	return (&net.Resolver{}).LookupIPAddr(ctx, addr)
 }
 
+// Check performs a DNS lookup check.
+func (d *DNS) Check(ctx context.Context) Result {
+	ip, dur, err := DNSLookupContext(ctx, d.ADDR)
+	return Result{
+		OK:       err == nil,
+		Duration: dur,
+		Data:     DNSData{IP: ip},
+		Error:    err,
+	}
+}
+
 // DNSLookup func
 func DNSLookup(addr string) (*net.IPAddr, time.Duration, error) {
+	return DNSLookupContext(context.Background(), addr)
+}
+
+// DNSLookupContext resolves addr via the default resolver, respecting ctx cancellation.
+func DNSLookupContext(ctx context.Context, addr string) (*net.IPAddr, time.Duration, error) {
 	var dnsTime time.Time
 	var dnsDuration time.Duration
 	traceDNS := &httptrace.ClientTrace{
@@ -37,7 +53,7 @@ func DNSLookup(addr string) (*net.IPAddr, time.Duration, error) {
 			dnsDuration = time.Since(dnsTime)
 		},
 	}
-	ctx := httptrace.WithClientTrace(context.Background(), traceDNS)
+	ctx = httptrace.WithClientTrace(ctx, traceDNS)
 	ips, err := resolverFn(ctx, addr)
 	if err != nil {
 		return nil, 0, err
@@ -50,6 +66,11 @@ func DNSLookup(addr string) (*net.IPAddr, time.Duration, error) {
 
 // DNSLookupFrom func
 func DNSLookupFrom(addr string, server string) (*net.IPAddr, time.Duration, error) {
+	return DNSLookupFromContext(context.Background(), addr, server)
+}
+
+// DNSLookupFromContext performs a direct DNS query to server, respecting ctx cancellation.
+func DNSLookupFromContext(ctx context.Context, addr string, server string) (*net.IPAddr, time.Duration, error) {
 	host, port, err := net.SplitHostPort(server)
 	if err != nil {
 		host = server
@@ -67,7 +88,7 @@ func DNSLookupFrom(addr string, server string) (*net.IPAddr, time.Duration, erro
 	msg.Question = []dns.Question{dns.Question{Name: dns.Fqdn(addr), Qtype: dns.TypeA, Qclass: dns.ClassINET}}
 
 	client := dns.Client{Net: "udp"}
-	resp, rtt, err := client.Exchange(&msg, serverAddress)
+	resp, rtt, err := client.ExchangeContext(ctx, &msg, serverAddress)
 
 	if err != nil {
 		return nil, 0, errors.New("dns exchange error: " + err.Error())

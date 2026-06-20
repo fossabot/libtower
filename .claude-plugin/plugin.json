@@ -1,0 +1,8 @@
+{
+  "name": "libtower",
+  "version": "0.3.0",
+  "description": "Network health-check library for Go — TCP, TLS, HTTP, HTTPS, DNS, ICMP ping, WebSocket, cert expiry",
+  "skills": [
+    ".claude/skills/libtower/SKILL.md"
+  ]
+}

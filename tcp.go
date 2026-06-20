@@ -23,8 +23,9 @@ type TCP struct {
 
 // TCPPortCheck checks if a tcp port is open
 func (tr *TCP) TCPPortCheck(ctx context.Context) (bool, error) {
+	dialer := net.Dialer{Timeout: tr.Timeout}
 	tr.Start = time.Now()
-	conn, err := net.DialTimeout("tcp", tr.URL.Host, tr.Timeout)
+	conn, err := dialer.DialContext(ctx, "tcp", tr.URL.Host)
 	tr.End = time.Now()
 	tr.Duration = tr.End.Sub(tr.Start)
 	if err != nil {
@@ -32,6 +33,12 @@ func (tr *TCP) TCPPortCheck(ctx context.Context) (bool, error) {
 	}
 	defer conn.Close()
 	return true, nil
+}
+
+// Check performs a TCP port check.
+func (tr *TCP) Check(ctx context.Context) Result {
+	ok, err := tr.TCPPortCheck(ctx)
+	return Result{OK: ok, Duration: tr.Duration, Error: err}
 }
 
 // TLSPortCheck check if a scured tcp port is open
@@ -42,11 +49,13 @@ func (tr *TCP) TLSPortCheck(ctx context.Context) (bool, error) {
 	}
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 
+	dialer := net.Dialer{Timeout: tr.Timeout}
 	tr.Start = time.Now()
-	conn, err := net.DialTimeout("tcp", tr.URL.Host, tr.Timeout)
+	conn, err := dialer.DialContext(ctx, "tcp", tr.URL.Host)
 	if err != nil {
 		return false, err
 	}
+	defer conn.Close()
 
 	tlsConn := tls.Client(conn, &config)
 	err = tlsConn.Handshake()

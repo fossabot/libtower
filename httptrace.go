@@ -1,17 +1,29 @@
 package libtower
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
 	"net/http/httptrace"
 	"time"
 )
 
+// Check performs an HTTP trace check.
+func (ht *HTTPTrace) Check(ctx context.Context) Result {
+	err := ht.TraceContext(ctx)
+	return Result{OK: err == nil, Duration: ht.Total, Error: err}
+}
+
 // Trace http
 func (ht *HTTPTrace) Trace() error {
+	return ht.TraceContext(context.Background())
+}
+
+// TraceContext round-trips an HTTP request capturing per-phase latency, respecting ctx cancellation.
+func (ht *HTTPTrace) TraceContext(ctx context.Context) error {
 	// res := HTTPTrace{URL: url, Method: method}
 
-	req, err := http.NewRequest(ht.Method, ht.URL, nil)
+	req, err := http.NewRequestWithContext(ctx, ht.Method, ht.URL, nil)
 	if err != nil {
 		return err
 	}

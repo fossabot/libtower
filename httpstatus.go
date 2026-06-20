@@ -1,15 +1,27 @@
 package libtower
 
 import (
+	"context"
 	"net/http"
 	"time"
 )
 
+// Check performs an HTTP status check.
+func (hsr *HTTP) Check(ctx context.Context) Result {
+	err := hsr.HTTPStatusContext(ctx)
+	return Result{OK: err == nil, Duration: hsr.Duration, Error: err}
+}
+
 // HTTPStatus check
 func (hsr *HTTP) HTTPStatus() error {
+	return hsr.HTTPStatusContext(context.Background())
+}
+
+// HTTPStatusContext performs an HTTP request, respecting ctx cancellation.
+func (hsr *HTTP) HTTPStatusContext(ctx context.Context) error {
 	// setup client
 	client := &http.Client{}
-	req, err := http.NewRequest(hsr.Method, hsr.URL, nil)
+	req, err := http.NewRequestWithContext(ctx, hsr.Method, hsr.URL, nil)
 	if err != nil {
 		return err
 	}
