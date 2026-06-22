@@ -2,6 +2,7 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/mismatched/libtower.svg)](https://pkg.go.dev/github.com/mismatched/libtower)
 [![Go Report Card](https://goreportcard.com/badge/github.com/mismatched/libtower)](https://goreportcard.com/report/github.com/mismatched/libtower)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmismatched%2Flibtower.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmismatched%2Flibtower?ref=badge_shield)
 
 Network health-check primitives for Go — TCP, TLS, HTTP, HTTPS, DNS, ICMP ping, WebSocket, and certificate expiry. Flat package, no sub-packages.
 
@@ -99,3 +100,6 @@ TraceContext(ctx)
 ## License
 
 MIT
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmismatched%2Flibtower.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmismatched%2Flibtower?ref=badge_large)
